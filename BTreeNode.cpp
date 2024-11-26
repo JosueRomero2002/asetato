@@ -125,6 +125,11 @@ void BTreeNode::remove(int k)
     }
 }
 
+// ----------------------------getPredecessor-------------------------------
+// Encuentra el predecesor inmediato de una clave en un nodo interno.
+// Esto se logra tomando el subárbol izquierdo de la clave en idx y avanzando hacia la derecha hasta alcanzar la hoja más grande.
+// Propósito: Reemplazar la clave eliminada con su predecesor.
+
 int BTreeNode::getPredecessor(int idx)
 {
     BTreeNode *curr = children[idx];
@@ -132,7 +137,12 @@ int BTreeNode::getPredecessor(int idx)
         curr = curr->children[curr->keys.size()];
     return curr->keys.back();
 }
+// ----------------------------------------------------------------------------
 
+// ----------------------------getSuccessor-------------------------------
+// Encuentra el sucesor inmediato de una clave en un nodo interno.
+// Esto se logra tomando el subárbol derecho de la clave en idx y avanzando hacia la izquierda hasta alcanzar la hoja más pequeña.
+// Propósito: Reemplazar la clave eliminada con su sucesor
 int BTreeNode::getSuccessor(int idx)
 {
     BTreeNode *curr = children[idx + 1];
@@ -140,7 +150,17 @@ int BTreeNode::getSuccessor(int idx)
         curr = curr->children[0];
     return curr->keys.front();
 }
+// ----------------------------------------------------------------------------
 
+// ----------------------------fill-------------------------------
+// Garantiza que el hijo en el índice idx tenga al menos 𝑡 claves antes de descender en él.
+// Cómo lo hace:
+
+// Si el hijo anterior tiene al menos 𝑡 claves, pide prestada una clave de él.
+// Si el siguiente hijo tiene al menos 𝑡 claves, pide prestada una clave de él.
+// De lo contrario, fusiona el hijo con uno de sus hermanos.
+
+// Propósito: Mantener las propiedades del Árbol B durante la eliminación
 void BTreeNode::fill(int idx)
 {
     if (idx != 0 && children[idx - 1]->keys.size() >= t)
@@ -155,7 +175,13 @@ void BTreeNode::fill(int idx)
             merge(idx - 1);
     }
 }
+// ----------------------------------------------------------------------------
 
+// ----------------------------borrowFromPrev-------------------------------
+// El hijo en el índice idx toma prestada una clave de su hermano izquierdo.
+// La clave más grande del hermano izquierdo sube al nodo actual y una clave del nodo actual baja al hijo.
+// Si hay subárboles, el último hijo del hermano izquierdo también se transfiere al hijo.
+// Propósito: Redistribuir claves para evitar la fusión.
 void BTreeNode::borrowFromPrev(int idx)
 {
     BTreeNode *child = children[idx];
@@ -168,7 +194,7 @@ void BTreeNode::borrowFromPrev(int idx)
     if (!sibling->isLeaf)
         sibling->children.pop_back();
 }
-
+// ----------------------------------------------------------------------------
 void BTreeNode::borrowFromNext(int idx)
 {
     BTreeNode *child = children[idx];
@@ -182,6 +208,11 @@ void BTreeNode::borrowFromNext(int idx)
         sibling->children.erase(sibling->children.begin());
 }
 
+// ----------------------------merge-------------------------------
+// Combina el hijo en el índice idx con su hermano derecho (hijo en el índice idx + 1).
+// La clave en el nodo actual que separa a ambos hijos baja para convertirse en la clave central del nodo fusionado.
+// Todos los subárboles e hijos del hermano derecho se transfieren al hijo en el índice idx.
+// Propósito: Reducir el tamaño del árbol cuando ambos hijos tienen menos de t claves.
 void BTreeNode::merge(int idx)
 {
     BTreeNode *child = children[idx];
@@ -194,3 +225,5 @@ void BTreeNode::merge(int idx)
     children.erase(children.begin() + idx + 1);
     delete sibling;
 }
+
+// -------------------------------------------------------------------------------------------------------------
